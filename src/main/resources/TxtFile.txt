@@ -1,0 +1,8 @@
+Can't finish GitHub sharing process
+			Successfully created project 'BatchForCDEF' on GitHub, but initial push failed:
+			Total 32 (delta 1), reused 0 (delta 0), pack-reused 0
+			remote: error: Trace: 1e4346a370ac32a9603d81ca2e9363df11eccbe0fb02efc418ddc19b8c6ae119
+			remote: error: See https://gh.io/lfs for more information.
+			remote: error: File src/main/resources/CPA-multipleCDEF.txt is 102.48 MB; this exceeds GitHub's file size limit of 100.00 MB
+			remote: error: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.
+			failed to push some refs to 'https://github.com/Gitch14/BatchForCDEF.git'
