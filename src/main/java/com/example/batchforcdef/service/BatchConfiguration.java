@@ -37,7 +37,7 @@ public class BatchConfiguration {
     @Bean
     public FlatFileItemReader<Transaction> reader() {
         FlatFileItemReader<Transaction> reader = new FlatFileItemReader<>();
-        reader.setResource(new ClassPathResource("src/main/resources/CPA-multipleCDEF.txt")); // Укажите путь к вашему файлу данных
+        reader.setResource(new ClassPathResource("src/main/resources/TxtFile.txt")); // Укажите путь к вашему файлу данных
         reader.setLineMapper(new DefaultLineMapper<Transaction>() {{
             setLineTokenizer(new FixedLengthTokenizer() {{
                 setNames("stringNumber", "svc2Agr2", "company", "bmoServAcc2Agr2", "ptc", "abc");
