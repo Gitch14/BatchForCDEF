@@ -6,3 +6,112 @@ Can't finish GitHub sharing process
 			remote: error: File src/main/resources/CPA-multipleCDEF.txt is 102.48 MB; this exceeds GitHub's file size limit of 100.00 MB
 			remote: error: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.
 			failed to push some refs to 'https://github.com/Gitch14/BatchForCDEF.git'
+
+
+
+
+			Sql code for db(mysql) :
+
+			CREATE TABLE batch_job_instance (
+                job_instance_id BIGINT  NOT NULL PRIMARY KEY ,
+                version BIGINT ,
+                job_name VARCHAR(100) NOT NULL,
+                job_key VARCHAR(32) NOT NULL,
+                constraint JOB_INST_UN unique (JOB_NAME, JOB_KEY)
+            ) ENGINE=InnoDB;
+
+            CREATE TABLE batch_job_execution (
+                job_execution_id BIGINT  NOT NULL PRIMARY KEY ,
+                version BIGINT  ,
+                job_instance_id BIGINT NOT NULL,
+                create_time DATETIME NOT NULL,
+                start_time DATETIME DEFAULT NULL ,
+                end_time DATETIME DEFAULT NULL ,
+                status VARCHAR(10) ,
+                exit_code VARCHAR(2500) ,
+                exit_message VARCHAR(2500) ,
+                last_updated DATETIME,
+                constraint JOB_INST_EXEC_FK foreign key (JOB_INSTANCE_ID)
+                references batch_job_instance(JOB_INSTANCE_ID)
+                on delete cascade
+            ) ENGINE=InnoDB;
+
+            CREATE TABLE batch_step_execution (
+                step_execution_id BIGINT  NOT NULL PRIMARY KEY ,
+                version BIGINT NOT NULL,
+                step_name VARCHAR(100) NOT NULL,
+                job_execution_id BIGINT NOT NULL,
+                start_time DATETIME DEFAULT NULL ,
+                end_time DATETIME DEFAULT NULL ,
+                status VARCHAR(10) ,
+                commit_count BIGINT ,
+                read_count BIGINT ,
+                filter_count BIGINT ,
+                write_count BIGINT ,
+                read_skip_count BIGINT ,
+                write_skip_count BIGINT ,
+                process_skip_count BIGINT ,
+                rollback_count BIGINT ,
+                exit_code VARCHAR(2500) ,
+                exit_message VARCHAR(2500) ,
+                last_updated DATETIME,
+                constraint JOB_EXEC_STEP_FK foreign key (JOB_EXECUTION_ID)
+                references batch_job_execution(JOB_EXECUTION_ID)
+                on delete cascade
+            ) ENGINE=InnoDB;
+
+            CREATE TABLE batch_job_execution_context (
+                job_execution_id BIGINT NOT NULL PRIMARY KEY,
+                short_context VARCHAR(2500) NOT NULL,
+                serialized_context TEXT ,
+                constraint JOB_EXEC_CTX_FK foreign key (JOB_EXECUTION_ID)
+                references batch_job_execution(JOB_EXECUTION_ID)
+                on delete cascade
+            ) ENGINE=InnoDB;
+
+            CREATE TABLE batch_step_execution_context (
+                step_execution_id BIGINT NOT NULL PRIMARY KEY,
+                short_context VARCHAR(2500) NOT NULL,
+                serialized_context TEXT ,
+                constraint STEP_EXEC_CTX_FK foreign key (STEP_EXECUTION_ID)
+                references batch_step_execution(STEP_EXECUTION_ID)
+                on delete cascade
+            ) ENGINE=InnoDB;
+
+            CREATE TABLE batch_job_execution_params (
+                job_execution_id BIGINT NOT NULL ,
+                type_cd VARCHAR(6) NOT NULL ,
+                key_name VARCHAR(100) NOT NULL ,
+                string_val VARCHAR(250) ,
+                date_val DATETIME DEFAULT NULL ,
+                long_val BIGINT ,
+                double_val DOUBLE PRECISION ,
+                identifying CHAR(1) NOT NULL ,
+                constraint JOB_EXEC_PARAMS_FK foreign key (JOB_EXECUTION_ID)
+                references batch_job_execution(JOB_EXECUTION_ID)
+                on delete cascade
+            ) ENGINE=InnoDB;
+
+            CREATE TABLE batch_step_execution_seq (
+                ID BIGINT NOT NULL,
+                UNIQUE_KEY CHAR(1) NOT NULL,
+                constraint UNIQUE_KEY_UN unique (UNIQUE_KEY)
+            ) ENGINE=InnoDB;
+            INSERT INTO batch_step_execution_seq values(0,'0');
+
+            CREATE TABLE batch_job_seq (
+                ID BIGINT NOT NULL,
+                UNIQUE_KEY CHAR(1) NOT NULL,
+                constraint UNIQUE_KEY_UN unique (UNIQUE_KEY)
+            ) ENGINE=InnoDB;
+            INSERT INTO batch_job_seq values(0,'0');
+
+            CREATE TABLE batch_job_execution_seq (
+              ID BIGINT NOT NULL,
+              UNIQUE_KEY CHAR(1) NOT NULL,
+              constraint UNIQUE_KEY_UN unique (UNIQUE_KEY)
+            ) ENGINE=InnoDB;
+            INSERT INTO batch_job_execution_seq values(0,'0');
+
+            ALTER TABLE BATCH_JOB_EXECUTION ADD COLUMN JOB_CONFIGURATION_LOCATION VARCHAR(250);
+

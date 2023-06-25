@@ -11,15 +11,13 @@ import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
-import org.springframework.batch.item.file.transform.FixedLengthTokenizer;
-import org.springframework.batch.item.file.transform.Range;
-import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 
 import javax.sql.DataSource;
+import java.util.regex.Pattern;
 
 @Configuration
 @EnableBatchProcessing
@@ -37,37 +35,51 @@ public class BatchConfiguration {
     @Bean
     public FlatFileItemReader<Transaction> reader() {
         FlatFileItemReader<Transaction> reader = new FlatFileItemReader<>();
-        reader.setResource(new ClassPathResource("src/main/resources/TxtFile.txt"));
-        reader.setLineMapper(new DefaultLineMapper<Transaction>() {{
-            setLineTokenizer(new FixedLengthTokenizer() {{
-                setNames("stringNumber", "svc2Agr2", "company", "bmoServAcc2Agr2", "ptc", "abc");
-                setColumns(new Range[] {new Range(1, 10), new Range(11, 30), new Range(31, 40),
-                        new Range(41, 60), new Range(61, 90), new Range(91, 100)});
-            }});
-            setFieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {{
-                setTargetType(Transaction.class);
-            }});
+        reader.setResource(new ClassPathResource("CPA-multipleCDEF.txt"));
+
+        CustomLineTokenizer tokenizer = new CustomLineTokenizer();
+        tokenizer.setDelimiterPattern(Pattern.compile("\\s+"));
+
+        String[] fieldNames = {"stringNumber", "svc2Agr2", "company", "bmoServAcc2Agr2", "ptc", "abc"};
+        tokenizer.setNames(fieldNames);
+
+        DefaultLineMapper<Transaction> lineMapper = new DefaultLineMapper<>();
+        lineMapper.setLineTokenizer(tokenizer);
+        lineMapper.setFieldSetMapper(new BeanWrapperFieldSetMapper<Transaction>() {{
+            setTargetType(Transaction.class);
         }});
+        reader.setLineMapper(lineMapper);
+
+        // Игнорирование ошибок неправильного количества токенов
+        reader.setLinesToSkip(1); // Пропустить заголовок
+        reader.setSkippedLinesCallback(line -> {
+            System.out.println("Ignored line: " + line);
+        });
+
+        // Exception handler
+        reader.setStrict(false); // Allow parsing errors
+
         return reader;
     }
+
 
     @Bean
     public JdbcBatchItemWriter<Transaction> writer() {
         JdbcBatchItemWriter<Transaction> writer = new JdbcBatchItemWriter<>();
         writer.setItemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>());
-        writer.setSql("INSERT INTO shema (id, stringNumber, svc2Agr2, company, bmoServAcc2Agr2, ptc, abc) " +
-                "VALUES (:id, :stringNumber, :svc2Agr2, :company, :bmoServAcc2Agr2, :ptc, :abc)");
+        writer.setSql("INSERT INTO shema1 (stringNumber, svc2Agr2, company, bmoServAcc2Agr2, ptc, abc) " +
+                "VALUES (:stringNumber, :svc2Agr2, :company, :bmoServAcc2Agr2, :ptc, :abc)");
         writer.setDataSource(dataSource);
         return writer;
     }
 
+
     @Bean
-    public Step myStep() {
+    public Step myStep(FlatFileItemReader<Transaction> reader, JdbcBatchItemWriter<Transaction> writer) {
         return stepBuilderFactory.get("myStep")
-                .tasklet((contribution, chunkContext) -> {
-                    // Step logic goes here
-                    return RepeatStatus.FINISHED;
-                })
+                .<Transaction, Transaction>chunk(10)
+                .reader(reader)
+                .writer(writer)
                 .build();
     }
 
