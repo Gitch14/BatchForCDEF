@@ -1,4 +1,4 @@
-package com.example.batchforcdef;
+package com.example.batchforcdef.service;
 
 import com.example.batchforcdef.model.Transaction;
 import org.springframework.batch.item.file.mapping.FieldSetMapper;

@@ -1,6 +1,7 @@
-package com.example.batchforcdef.service;
+package com.example.batchforcdef.configuration;
 
 import com.example.batchforcdef.model.Transaction;
+import com.example.batchforcdef.service.CustomLineTokenizer;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
